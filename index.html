@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Between Cities</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#0f1318; --ink:#e8eaed; --muted:#6b7585; --accent:#7ea8c9; --line:#1e2530; }
+    html { scroll-behavior: smooth; }
+    body { background:var(--bg); color:var(--ink); font-family:'Cormorant Garamond',Georgia,serif; font-size:18px; line-height:1.7; overflow-x:hidden; }
+
+    /* NAV */
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; justify-content:space-between; align-items:center; padding:1.4rem 3rem; background:rgba(15,19,24,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+    .nav-logo { font-size:1rem; font-family:'DM Mono',monospace; font-weight:300; letter-spacing:0.08em; text-decoration:none; color:var(--ink); }
+    .nav-links { display:flex; gap:2.4rem; list-style:none; }
+    .nav-links a { font-family:'DM Mono',monospace; font-size:0.72rem; font-weight:300; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; color:var(--muted); transition:color 0.2s; }
+    .nav-links a:hover { color:var(--ink); }
+
+    /* HERO */
+    #home { min-height:100vh; display:flex; flex-direction:column; justify-content:flex-end; padding:0 3rem 5rem; position:relative; }
+    .hero-eyebrow { font-family:'DM Mono',monospace; font-size:0.72rem; font-weight:300; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:1.2rem; opacity:0; animation:fadeUp 0.8s ease 0.2s forwards; }
+    h1 { font-size:clamp(4rem,10vw,9rem); font-weight:300; line-height:1; letter-spacing:-0.02em; opacity:0; animation:fadeUp 0.8s ease 0.35s forwards; }
+    h1 em { font-style:italic; color:var(--accent); }
+    .hero-sub { margin-top:1.8rem; font-size:1.2rem; font-weight:300; color:var(--muted); max-width:36ch; opacity:0; animation:fadeUp 0.8s ease 0.5s forwards; }
+    .hero-scroll { position:absolute; right:3rem; bottom:5rem; font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); writing-mode:vertical-rl; display:flex; align-items:center; gap:0.8rem; opacity:0; animation:fadeIn 1s ease 1s forwards; }
+    .hero-scroll::before { content:''; display:block; width:1px; height:48px; background:var(--accent); }
+
+    /* PROFILE */
+    .hero-profile { position:absolute; top:50%; right:4rem; transform:translateY(-50%); width:320px; height:420px; overflow:hidden; opacity:0; animation:fadeIn 1s ease 0.6s forwards; }
+    .hero-profile img { width:100%; height:100%; object-fit:cover; display:block; filter:grayscale(15%); }
+
+    /* SECTIONS */
+    section { padding:7rem 3rem; max-width:900px; margin:0 auto; border-top:1px solid var(--line); }
+    .section-label { font-family:'DM Mono',monospace; font-size:0.68rem; font-weight:300; letter-spacing:0.18em; text-transform:uppercase; color:var(--accent); margin-bottom:3rem; }
+    h2 { font-size:clamp(2rem,4vw,3.2rem); font-weight:300; line-height:1.15; letter-spacing:-0.01em; margin-bottom:2rem; }
+    h2 em { font-style:italic; }
+    p { font-size:1.1rem; font-weight:300; color:#a8b0bc; max-width:60ch; margin-bottom:1.2rem; }
+
+    /* ABOUT */
+    .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start; }
+    .about-detail { border-top:1px solid var(--line); padding-top:1.2rem; margin-top:0.8rem; }
+    .about-detail dt { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin-bottom:0.3rem; }
+    .about-detail dd { font-size:1rem; color:var(--ink); }
+
+    /* PHOTOGRAPHY */
+    .photo-grid { columns:3; column-gap:10px; }
+    .photo-tile { break-inside:avoid; margin-bottom:10px; overflow:hidden; display:block; }
+    .photo-tile img { width:100%; height:auto; display:block; transition:transform 0.4s ease; }
+    .photo-tile:hover img { transform:scale(1.03); }
+
+    /* BLOG */
+    .blog-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:0.6rem; flex-wrap:wrap; gap:1rem; }
+    .blog-header h2 { margin-bottom:0; }
+    .blog-subtitle { font-family:'DM Mono',monospace; font-size:0.68rem; color:var(--muted); letter-spacing:0.08em; margin-bottom:3rem; }
+    #write-btn { display:none; font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; background:none; border:1px solid var(--accent); color:var(--accent); padding:0.5rem 1rem; cursor:pointer; transition:background 0.2s,color 0.2s; }
+    #write-btn:hover { background:var(--accent); color:var(--bg); }
+    #admin-toggle { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; background:none; border:none; color:var(--muted); cursor:pointer; margin-top:2rem; display:block; transition:color 0.2s; }
+    #admin-toggle:hover { color:var(--ink); }
+    #password-prompt { display:none; margin-top:1.5rem; gap:0.6rem; align-items:center; }
+    #password-prompt.visible { display:flex; }
+    #password-input { font-family:'DM Mono',monospace; font-size:0.75rem; background:var(--line); border:1px solid var(--muted); color:var(--ink); padding:0.5rem 0.8rem; outline:none; width:180px; }
+    #password-input:focus { border-color:var(--accent); }
+    #password-submit { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; background:none; border:1px solid var(--muted); color:var(--muted); padding:0.5rem 0.8rem; cursor:pointer; transition:all 0.2s; }
+    #password-submit:hover { border-color:var(--ink); color:var(--ink); }
+    #password-error { font-family:'DM Mono',monospace; font-size:0.62rem; color:#c07070; margin-top:0.4rem; display:none; }
+
+    /* COMPOSER */
+    #post-composer { display:none; flex-direction:column; gap:1rem; padding:2rem; border:1px solid var(--line); background:#0c1016; margin-bottom:3rem; }
+    #post-composer.visible { display:flex; }
+    .composer-heading { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); margin-bottom:0.5rem; }
+    #post-composer label { font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:0.3rem; display:block; }
+    #post-composer input[type="text"], #post-composer textarea { font-family:'Cormorant Garamond',Georgia,serif; font-size:1rem; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:0.7rem 1rem; outline:none; width:100%; resize:vertical; transition:border-color 0.2s; }
+    #post-composer input[type="text"]:focus, #post-composer textarea:focus { border-color:var(--accent); }
+    #post-composer textarea { min-height:200px; line-height:1.7; }
+    .image-upload-area { border:1px dashed var(--muted); padding:1.2rem; text-align:center; cursor:pointer; transition:border-color 0.2s; position:relative; }
+    .image-upload-area:hover { border-color:var(--accent); }
+    .image-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .image-upload-label { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); pointer-events:none; }
+    #image-preview-container { display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:0.4rem; }
+    .image-preview-thumb { position:relative; width:80px; height:80px; }
+    .image-preview-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .image-preview-thumb button { position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); border:none; color:#fff; font-size:0.65rem; cursor:pointer; padding:1px 4px; }
+    .composer-actions { display:flex; gap:0.8rem; justify-content:flex-end; }
+    .btn-publish { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; background:var(--accent); border:1px solid var(--accent); color:var(--bg); padding:0.6rem 1.2rem; cursor:pointer; transition:opacity 0.2s; }
+    .btn-publish:hover { opacity:0.8; }
+    .btn-cancel { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; background:none; border:1px solid var(--line); color:var(--muted); padding:0.6rem 1.2rem; cursor:pointer; transition:all 0.2s; }
+    .btn-cancel:hover { border-color:var(--muted); color:var(--ink); }
+
+    /* POST LIST */
+    .post-list { display:flex; flex-direction:column; }
+    .post-item { padding:2rem 0; border-bottom:1px solid var(--line); }
+    .post-meta { display:flex; align-items:baseline; gap:1.5rem; margin-bottom:0.5rem; }
+    .post-date { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; white-space:nowrap; }
+    .post-title-text { font-size:1.4rem; font-weight:400; color:var(--ink); cursor:pointer; transition:color 0.2s; }
+    .post-title-text:hover { color:var(--accent); }
+    .post-preview { font-size:0.98rem; color:var(--muted); line-height:1.6; margin-bottom:0.6rem; max-width:65ch; }
+    .post-body { display:none; font-size:1.05rem; color:#a8b0bc; line-height:1.8; margin-top:0.8rem; max-width:65ch; white-space:pre-wrap; }
+    .post-body.open { display:block; }
+    .post-images { display:none; flex-wrap:wrap; gap:8px; margin-top:1rem; }
+    .post-images.open { display:flex; }
+    .post-images img { max-width:100%; max-height:400px; object-fit:cover; display:block; }
+    .post-actions { display:flex; gap:1.2rem; align-items:center; margin-top:0.4rem; }
+    .post-read-toggle { font-family:'DM Mono',monospace; font-size:0.65rem; color:var(--accent); letter-spacing:0.1em; cursor:pointer; background:none; border:none; padding:0; transition:opacity 0.2s; }
+    .post-read-toggle:hover { opacity:0.7; }
+    .btn-edit { display:none; font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; background:none; border:none; color:var(--muted); cursor:pointer; padding:0; transition:color 0.2s; }
+    .btn-edit:hover { color:var(--ink); }
+    .btn-edit.visible { display:inline-block; }
+    .btn-delete { display:none; font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; background:none; border:none; color:#c07070; cursor:pointer; padding:0; transition:opacity 0.2s; }
+    .btn-delete:hover { opacity:0.7; }
+    .btn-delete.visible { display:inline-block; }
+    .blog-empty { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--muted); letter-spacing:0.1em; padding:2rem 0; border-top:1px solid var(--line); }
+
+    /* CONTACT */
+    .contact-row { display:flex; flex-direction:column; gap:0; }
+    .contact-link { display:flex; justify-content:space-between; align-items:center; padding:1.6rem 0; border-bottom:1px solid var(--line); text-decoration:none; color:var(--ink); transition:padding-left 0.3s ease; }
+    .contact-link:hover { padding-left:0.8rem; }
+    .contact-link:hover .contact-arrow { transform:translateX(4px); color:var(--accent); }
+    .contact-platform { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); width:110px; }
+    .contact-handle { font-size:1.1rem; font-weight:300; }
+    .contact-arrow { font-size:1rem; color:var(--muted); transition:transform 0.3s ease,color 0.3s ease; }
+
+    /* FOOTER */
+    footer { padding:3rem; text-align:center; font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--line); max-width:900px; margin:0 auto; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .reveal { opacity:0; transform:translateY(20px); transition:opacity 0.7s ease,transform 0.7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* RESPONSIVE */
+    @media (max-width:780px) {
+      nav { padding:1.2rem 1.5rem; }
+      .nav-links { gap:1.4rem; }
+      #home, section { padding-left:1.5rem; padding-right:1.5rem; }
+      .hero-scroll { display:none; }
+      .hero-profile { position:relative; top:auto; right:auto; transform:none; width:140px; height:180px; margin-bottom:2rem; }
+      .about-grid { grid-template-columns:1fr; gap:2rem; }
+      .photo-grid { columns:2; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#home">Between Cities</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#photography">Photography</a></li>
+      <li><a href="#blog">Blogs</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="home" style="border:none; max-width:100%; padding-left:3rem; padding-right:3rem;">
+    <div class="hero-profile">
+      <img src="images/profile.jpg" alt="Limeng Sun" />
+    </div>
+    <p class="hero-eyebrow">Limeng Sun &mdash; London</p>
+    <h1>Between<br><em>Cities.</em></h1>
+    <p class="hero-sub">London-based lawyer. Wine enthusiast. Runner. Cinephile.</p>
+    <div class="hero-scroll">Scroll</div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <p class="section-label reveal">001 &mdash; About</p>
+    <div class="about-grid">
+      <div>
+        <h2 class="reveal">A little<br><em>about me.</em></h2>
+        <p class="reveal">I'm Limeng, a lawyer based in London. When I'm not working, you'll find me seeking out a good bottle of wine, logging miles on a run, or losing myself in a film.</p>
+        <p class="reveal">I believe that a full life is made of many things &mdash; and this site is where some of them live.</p>
+      </div>
+      <div class="reveal">
+        <dl>
+          <div class="about-detail"><dt>Location</dt><dd>London, UK</dd></div>
+          <div class="about-detail"><dt>Interests</dt><dd>Wine tasting, distance running, independent films, US Supreme Court</dd></div>
+          <div class="about-detail"><dt>Personal Bests</dt><dd>5K &mdash; 21'</dd></div>
+          <div style="padding-top:0.4rem;"><dd style="font-size:1rem;color:var(--ink);">10K &mdash; 51'32"</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTOGRAPHY -->
+  <section id="photography">
+    <p class="section-label reveal">002 &mdash; Photography</p>
+    <h2 class="reveal">Through the<br><em>lens.</em></h2>
+    <p class="reveal" style="margin-bottom:3rem;">A selection of photographs &mdash; street, travel, and quiet moments in between.</p>
+    <div class="photo-grid reveal">
+      <div class="photo-tile"><img src="images/1.jpg" alt="Photo 1" /></div>
+      <div class="photo-tile"><img src="images/2.jpg" alt="Photo 2" /></div>
+      <div class="photo-tile"><img src="images/3.jpg" alt="Photo 3" /></div>
+      <div class="photo-tile"><img src="images/4.jpg" alt="Photo 4" /></div>
+      <div class="photo-tile"><img src="images/5.jpg" alt="Photo 5" /></div>
+      <div class="photo-tile"><img src="images/6.jpg" alt="Photo 6" /></div>
+      <div class="photo-tile"><img src="images/7.jpg" alt="Photo 7" /></div>
+      <div class="photo-tile"><img src="images/8.jpg" alt="Photo 8" /></div>
+      <div class="photo-tile"><img src="images/9.jpg" alt="Photo 9" /></div>
+      <div class="photo-tile"><img src="images/10.jpg" alt="Photo 10" /></div>
+      <div class="photo-tile"><img src="images/11.jpg" alt="Photo 11" /></div>
+      <div class="photo-tile"><img src="images/12.jpg" alt="Photo 12" /></div>
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section id="blog">
+    <p class="section-label reveal">003 &mdash; Blogs</p>
+    <div class="blog-header reveal">
+      <h2>Thoughts,<br><em>unfiltered.</em></h2>
+      <button id="write-btn" onclick="openComposer()">+ New post</button>
+    </div>
+    <p class="blog-subtitle reveal">Notes on wine, running, film, law, and everything in between.</p>
+
+    <div id="post-composer">
+      <p class="composer-heading" id="composer-heading">New post</p>
+      <div>
+        <label for="post-title-input">Title</label>
+        <input type="text" id="post-title-input" placeholder="What's on your mind?" />
+      </div>
+      <div>
+        <label for="post-body-input">Write</label>
+        <textarea id="post-body-input" placeholder="Write your post here..."></textarea>
+      </div>
+      <div>
+        <label>Images (optional)</label>
+        <div class="image-upload-area">
+          <input type="file" id="post-image-input" accept="image/*" multiple onchange="handleImageUpload(this)" />
+          <span class="image-upload-label">+ Click to attach photos</span>
+        </div>
+        <div id="image-preview-container"></div>
+      </div>
+      <div class="composer-actions">
+        <button class="btn-cancel" onclick="closeComposer()">Cancel</button>
+        <button class="btn-publish" id="publish-btn" onclick="publishPost()">Publish</button>
+      </div>
+    </div>
+
+    <div class="post-list" id="post-list"></div>
+
+    <button id="admin-toggle" onclick="togglePasswordPrompt()">&#x1F512; Author login</button>
+    <div id="password-prompt">
+      <input type="password" id="password-input" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()" />
+      <button id="password-submit" onclick="checkPassword()">Enter</button>
+    </div>
+    <div id="password-error">Incorrect password.</div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <p class="section-label reveal">004 &mdash; Contact</p>
+    <h2 class="reveal">Get in<br><em>touch.</em></h2>
+    <p class="reveal" style="margin-bottom:3rem;">Whether you have a question, a project, or just want to say hello &mdash; I'm always glad to hear from people.</p>
+    <div class="contact-row reveal">
+      <a class="contact-link" href="https://www.linkedin.com/in/limengsun/" target="_blank" rel="noopener">
+        <span class="contact-platform">LinkedIn</span>
+        <span class="contact-handle">Limeng Sun</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+      <a class="contact-link" href="https://letterboxd.com/unmingles/" target="_blank" rel="noopener">
+        <span class="contact-platform">Letterboxd</span>
+        <span class="contact-handle">unmingles</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+      <a class="contact-link" href="mailto:limengsun15&#64;gmail.com">
+        <span class="contact-platform">Email</span>
+        <span class="contact-handle">limengsun15&#64;gmail.com</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Limeng Sun &nbsp;&middot;&nbsp; London</p>
+  </footer>
+
+  <script>
+    var ADMIN_PASSWORD = '911015';
+    var isUnlocked = false;
+    var pendingImages = [];
+    var editingIdx = null;
+
+    var revealObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
+
+    function getPosts() {
+      try { return JSON.parse(localStorage.getItem('bc_posts') || '[]'); } catch(e) { return []; }
+    }
+    function savePosts(posts) { localStorage.setItem('bc_posts', JSON.stringify(posts)); }
+
+    function formatDate(iso) {
+      var d = new Date(iso);
+      return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    }
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function previewText(body, limit) {
+      var clean = body.trim();
+      if (clean.length <= limit) return escHtml(clean);
+      return escHtml(clean.slice(0, limit).trimEnd()) + '&#x2026;';
+    }
+
+    function handleImageUpload(input) {
+      Array.from(input.files).forEach(function(file) {
+        var reader = new FileReader();
+        reader.onload = function(e) { pendingImages.push(e.target.result); renderPreviews(); };
+        reader.readAsDataURL(file);
+      });
+      input.value = '';
+    }
+    function renderPreviews() {
+      var c = document.getElementById('image-preview-container');
+      c.innerHTML = '';
+      pendingImages.forEach(function(src, i) {
+        var d = document.createElement('div');
+        d.className = 'image-preview-thumb';
+        d.innerHTML = '<img src="' + src + '" /><button onclick="removeImg(' + i + ')">x</button>';
+        c.appendChild(d);
+      });
+    }
+    function removeImg(i) { pendingImages.splice(i, 1); renderPreviews(); }
+
+    function renderPosts() {
+      var list = document.getElementById('post-list');
+      var posts = getPosts();
+      list.innerHTML = '';
+      if (!posts.length) {
+        list.innerHTML = '<div class="blog-empty">No posts yet.</div>';
+        return;
+      }
+      posts.slice().reverse().forEach(function(post, idx) {
+        var realIdx = posts.length - 1 - idx;
+        var hasImgs = post.images && post.images.length;
+        var imgHtml = hasImgs ? post.images.map(function(s) { return '<img src="' + s + '" />'; }).join('') : '';
+        var el = document.createElement('div');
+        el.className = 'post-item';
+        el.innerHTML =
+          '<div class="post-meta">' +
+            '<span class="post-date">' + formatDate(post.date) + '</span>' +
+            '<span class="post-title-text" onclick="togglePost(this)">' + escHtml(post.title) + '</span>' +
+          '</div>' +
+          '<div class="post-preview">' + previewText(post.body, 160) + '</div>' +
+          '<div class="post-body">' + escHtml(post.body) + '</div>' +
+          (hasImgs ? '<div class="post-images">' + imgHtml + '</div>' : '') +
+          '<div class="post-actions">' +
+            '<button class="post-read-toggle" onclick="togglePost(this.closest(\'.post-item\').querySelector(\'.post-title-text\'))">Read more &#x2192;</button>' +
+            '<button class="btn-edit' + (isUnlocked ? ' visible' : '') + '" onclick="editPost(' + realIdx + ')">Edit</button>' +
+            '<button class="btn-delete' + (isUnlocked ? ' visible' : '') + '" onclick="delPost(' + realIdx + ')">Delete</button>' +
+          '</div>';
+        list.appendChild(el);
+      });
+    }
+
+    function togglePost(titleEl) {
+      var item = titleEl.closest('.post-item');
+      var body = item.querySelector('.post-body');
+      var preview = item.querySelector('.post-preview');
+      var imgs = item.querySelector('.post-images');
+      var tog = item.querySelector('.post-read-toggle');
+      var open = body.classList.toggle('open');
+      if (imgs) imgs.classList.toggle('open', open);
+      preview.style.display = open ? 'none' : '';
+      tog.innerHTML = open ? '&#x2191; Collapse' : 'Read more &#x2192;';
+    }
+
+    function editPost(i) {
+      var posts = getPosts();
+      var post = posts[i];
+      editingIdx = i;
+      document.getElementById('post-title-input').value = post.title;
+      document.getElementById('post-body-input').value = post.body;
+      pendingImages = post.images ? post.images.slice() : [];
+      renderPreviews();
+      document.getElementById('composer-heading').textContent = 'Edit post';
+      document.getElementById('publish-btn').textContent = 'Save changes';
+      document.getElementById('post-composer').classList.add('visible');
+      document.getElementById('post-title-input').focus();
+      document.getElementById('post-composer').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    function delPost(i) {
+      if (!confirm('Delete this post?')) return;
+      var posts = getPosts(); posts.splice(i, 1); savePosts(posts); renderPosts();
+    }
+
+    function openComposer() {
+      editingIdx = null;
+      document.getElementById('composer-heading').textContent = 'New post';
+      document.getElementById('publish-btn').textContent = 'Publish';
+      document.getElementById('post-composer').classList.add('visible');
+      document.getElementById('post-title-input').focus();
+    }
+    function closeComposer() {
+      document.getElementById('post-composer').classList.remove('visible');
+      document.getElementById('post-title-input').value = '';
+      document.getElementById('post-body-input').value = '';
+      pendingImages = []; renderPreviews();
+      editingIdx = null;
+    }
+    function publishPost() {
+      var title = document.getElementById('post-title-input').value.trim();
+      var body = document.getElementById('post-body-input').value.trim();
+      if (!title || !body) { alert('Please add a title and content.'); return; }
+      var posts = getPosts();
+      if (editingIdx !== null) {
+        posts[editingIdx].title = title;
+        posts[editingIdx].body = body;
+        posts[editingIdx].images = pendingImages.slice();
+      } else {
+        posts.push({ title:title, body:body, images:pendingImages.slice(), date:new Date().toISOString() });
+      }
+      savePosts(posts); closeComposer(); renderPosts();
+    }
+
+    function togglePasswordPrompt() {
+      if (isUnlocked) {
+        isUnlocked = false;
+        document.getElementById('write-btn').style.display = 'none';
+        document.getElementById('admin-toggle').textContent = 'Author login';
+        renderPosts(); return;
+      }
+      var p = document.getElementById('password-prompt');
+      p.classList.toggle('visible');
+      if (p.classList.contains('visible')) document.getElementById('password-input').focus();
+    }
+    function checkPassword() {
+      var val = document.getElementById('password-input').value;
+      var err = document.getElementById('password-error');
+      if (val === ADMIN_PASSWORD) {
+        isUnlocked = true;
+        document.getElementById('password-prompt').classList.remove('visible');
+        document.getElementById('password-input').value = '';
+        err.style.display = 'none';
+        document.getElementById('write-btn').style.display = 'inline-block';
+        document.getElementById('admin-toggle').textContent = 'Lock';
+        renderPosts();
+      } else {
+        err.style.display = 'block';
+        document.getElementById('password-input').value = '';
+        document.getElementById('password-input').focus();
+      }
+    }
+    renderPosts();
+  </script>
+</body>
+</html>
