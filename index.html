@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Between Cities</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#0f1318; --ink:#e8eaed; --muted:#6b7585; --accent:#7ea8c9; --line:#1e2530; }
+    html { scroll-behavior: smooth; }
+    body { background:var(--bg); color:var(--ink); font-family:'Cormorant Garamond',Georgia,serif; font-size:18px; line-height:1.7; overflow-x:hidden; }
+
+    /* NAV */
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; justify-content:space-between; align-items:center; padding:1.4rem 3rem; background:rgba(15,19,24,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+    .nav-logo { font-size:1rem; font-family:'DM Mono',monospace; font-weight:300; letter-spacing:0.08em; text-decoration:none; color:var(--ink); }
+    .nav-links { display:flex; gap:2.4rem; list-style:none; }
+    .nav-links a { font-family:'DM Mono',monospace; font-size:0.72rem; font-weight:300; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; color:var(--muted); transition:color 0.2s; }
+    .nav-links a:hover { color:var(--ink); }
+
+    /* HERO */
+    #home { min-height:100vh; display:flex; flex-direction:column; justify-content:flex-end; padding:0 3rem 5rem; position:relative; }
+    .hero-eyebrow { font-family:'DM Mono',monospace; font-size:0.72rem; font-weight:300; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:1.2rem; opacity:0; animation:fadeUp 0.8s ease 0.2s forwards; }
+    h1 { font-size:clamp(4rem,10vw,9rem); font-weight:300; line-height:1; letter-spacing:-0.02em; opacity:0; animation:fadeUp 0.8s ease 0.35s forwards; }
+    h1 em { font-style:italic; color:var(--accent); }
+    .hero-sub { margin-top:1.8rem; font-size:1.2rem; font-weight:300; color:var(--muted); max-width:36ch; opacity:0; animation:fadeUp 0.8s ease 0.5s forwards; }
+    .hero-scroll { position:absolute; right:3rem; bottom:5rem; font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); writing-mode:vertical-rl; display:flex; align-items:center; gap:0.8rem; opacity:0; animation:fadeIn 1s ease 1s forwards; }
+    .hero-scroll::before { content:''; display:block; width:1px; height:48px; background:var(--accent); }
+
+    /* PROFILE */
+    .hero-profile { position:absolute; top:50%; right:4rem; transform:translateY(-50%); width:320px; height:420px; overflow:hidden; opacity:0; animation:fadeIn 1s ease 0.6s forwards; }
+    .hero-profile img { width:100%; height:100%; object-fit:cover; display:block; filter:grayscale(15%); }
+
+    /* SECTIONS */
+    section { padding:7rem 3rem; max-width:900px; margin:0 auto; border-top:1px solid var(--line); }
+    .section-label { font-family:'DM Mono',monospace; font-size:0.68rem; font-weight:300; letter-spacing:0.18em; text-transform:uppercase; color:var(--accent); margin-bottom:3rem; }
+    h2 { font-size:clamp(2rem,4vw,3.2rem); font-weight:300; line-height:1.15; letter-spacing:-0.01em; margin-bottom:2rem; }
+    h2 em { font-style:italic; }
+    p { font-size:1.1rem; font-weight:300; color:#a8b0bc; max-width:60ch; margin-bottom:1.2rem; }
+
+    /* ABOUT */
+    .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start; }
+    .about-detail { border-top:1px solid var(--line); padding-top:1.2rem; margin-top:0.8rem; }
+    .about-detail dt { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin-bottom:0.3rem; }
+    .about-detail dd { font-size:1rem; color:var(--ink); }
+
+    /* PHOTOGRAPHY */
+    .photo-grid { columns:3; column-gap:10px; }
+    .photo-tile { break-inside:avoid; margin-bottom:10px; overflow:hidden; display:block; }
+    .photo-tile img { width:100%; height:auto; display:block; transition:transform 0.4s ease; }
+    .photo-tile:hover img { transform:scale(1.03); }
+
+    /* BLUESKY FEED */
+    .feed-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:0.6rem; flex-wrap:wrap; gap:1rem; }
+    .feed-header h2 { margin-bottom:0; }
+    .feed-subtitle { font-family:'DM Mono',monospace; font-size:0.68rem; color:var(--muted); letter-spacing:0.08em; margin-bottom:3rem; }
+    .feed-subtitle a { color:var(--accent); text-decoration:none; }
+    .feed-subtitle a:hover { text-decoration:underline; }
+
+    .feed-list { display:flex; flex-direction:column; }
+    .feed-loading { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--muted); letter-spacing:0.1em; padding:2rem 0; border-top:1px solid var(--line); }
+    .feed-error { font-family:'DM Mono',monospace; font-size:0.72rem; color:#c07070; letter-spacing:0.1em; padding:2rem 0; border-top:1px solid var(--line); }
+
+    .bsky-card {
+      padding:2rem 0;
+      border-bottom:1px solid var(--line);
+      text-decoration:none;
+      display:block;
+      color:inherit;
+      transition:padding-left 0.2s;
+    }
+    .bsky-card:hover { padding-left:0.5rem; }
+    .bsky-meta { display:flex; align-items:baseline; gap:1.2rem; margin-bottom:0.7rem; }
+    .bsky-date { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; white-space:nowrap; }
+    .bsky-text { font-size:1.05rem; color:#a8b0bc; line-height:1.75; max-width:65ch; }
+    .bsky-text a { color:var(--accent); text-decoration:none; }
+    .bsky-images { display:flex; flex-wrap:wrap; gap:8px; margin-top:1rem; }
+    .bsky-images img { max-height:280px; max-width:100%; object-fit:cover; display:block; }
+    .bsky-footer { display:flex; gap:1.5rem; margin-top:0.8rem; }
+    .bsky-stat { font-family:'DM Mono',monospace; font-size:0.62rem; color:var(--muted); letter-spacing:0.08em; }
+    .bsky-arrow { font-family:'DM Mono',monospace; font-size:0.62rem; color:var(--accent); letter-spacing:0.1em; margin-left:auto; opacity:0; transition:opacity 0.2s; }
+    .bsky-card:hover .bsky-arrow { opacity:1; }
+
+    /* CONTACT */
+    .contact-row { display:flex; flex-direction:column; gap:0; }
+    .contact-link { display:flex; justify-content:space-between; align-items:center; padding:1.6rem 0; border-bottom:1px solid var(--line); text-decoration:none; color:var(--ink); transition:padding-left 0.3s ease; }
+    .contact-link:hover { padding-left:0.8rem; }
+    .contact-link:hover .contact-arrow { transform:translateX(4px); color:var(--accent); }
+    .contact-platform { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); width:110px; }
+    .contact-handle { font-size:1.1rem; font-weight:300; }
+    .contact-arrow { font-size:1rem; color:var(--muted); transition:transform 0.3s ease,color 0.3s ease; }
+
+    /* FOOTER */
+    footer { padding:3rem; text-align:center; font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--line); max-width:900px; margin:0 auto; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .reveal { opacity:0; transform:translateY(20px); transition:opacity 0.7s ease,transform 0.7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* RESPONSIVE */
+    @media (max-width:780px) {
+      nav { padding:1.2rem 1.5rem; }
+      .nav-links { gap:1.4rem; }
+      #home, section { padding-left:1.5rem; padding-right:1.5rem; }
+      .hero-scroll { display:none; }
+      .hero-profile { position:relative; top:auto; right:auto; transform:none; width:140px; height:180px; margin-bottom:2rem; }
+      .about-grid { grid-template-columns:1fr; gap:2rem; }
+      .photo-grid { columns:2; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#home">Between Cities</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#photography">Photography</a></li>
+      <li><a href="#blog">Blogs</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="home" style="border:none; max-width:100%; padding-left:3rem; padding-right:3rem;">
+    <div class="hero-profile">
+      <img src="images/profile.jpg" alt="Limeng Sun" />
+    </div>
+    <p class="hero-eyebrow">Limeng Sun &mdash; London</p>
+    <h1>Between<br><em>Cities.</em></h1>
+    <p class="hero-sub">London-based lawyer. Wine enthusiast. Runner. Cinephile.</p>
+    <div class="hero-scroll">Scroll</div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <p class="section-label reveal">001 &mdash; About</p>
+    <div class="about-grid">
+      <div>
+        <h2 class="reveal">A little<br><em>about me.</em></h2>
+        <p class="reveal">I'm Limeng, a lawyer based in London. When I'm not working, you'll find me seeking out a good bottle of wine, logging miles on a run, or losing myself in a film.</p>
+        <p class="reveal">I believe that a full life is made of many things &mdash; and this site is where some of them live.</p>
+      </div>
+      <div class="reveal">
+        <dl>
+          <div class="about-detail"><dt>Location</dt><dd>London, UK</dd></div>
+          <div class="about-detail"><dt>Interests</dt><dd>Wine tasting, distance running, independent films, US Supreme Court</dd></div>
+          <div class="about-detail"><dt>Personal Bests</dt><dd>10K &mdash; 51'32"</dd></div>
+          <div style="padding-top:0.4rem;"><dd style="font-size:1rem;color:var(--ink);">5K &mdash; 21'00"</dd></div>
+          <div class="about-detail"><dt>Favourite Wines</dt><dd>Brunello di Montalcino, Bordeaux, Southern Rhone Blend, White Burgundy, English Sparkling</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTOGRAPHY -->
+  <section id="photography">
+    <p class="section-label reveal">002 &mdash; Photography</p>
+    <h2 class="reveal">Through the<br><em>lens.</em></h2>
+    <p class="reveal" style="margin-bottom:3rem;">A selection of photographs &mdash; street, travel, and quiet moments in between.</p>
+    <div class="photo-grid reveal">
+      <div class="photo-tile"><img src="images/1.jpg" alt="Photo 1" /></div>
+      <div class="photo-tile"><img src="images/2.jpg" alt="Photo 2" /></div>
+      <div class="photo-tile"><img src="images/3.jpg" alt="Photo 3" /></div>
+      <div class="photo-tile"><img src="images/4.jpg" alt="Photo 4" /></div>
+      <div class="photo-tile"><img src="images/5.jpg" alt="Photo 5" /></div>
+      <div class="photo-tile"><img src="images/6.jpg" alt="Photo 6" /></div>
+      <div class="photo-tile"><img src="images/7.jpg" alt="Photo 7" /></div>
+      <div class="photo-tile"><img src="images/8.jpg" alt="Photo 8" /></div>
+      <div class="photo-tile"><img src="images/9.jpg" alt="Photo 9" /></div>
+      <div class="photo-tile"><img src="images/10.jpg" alt="Photo 10" /></div>
+      <div class="photo-tile"><img src="images/11.jpg" alt="Photo 11" /></div>
+      <div class="photo-tile"><img src="images/12.jpg" alt="Photo 12" /></div>
+    </div>
+  </section>
+
+  <!-- BLOGS / BLUESKY FEED -->
+  <section id="blog">
+    <p class="section-label reveal">003 &mdash; Blogs</p>
+    <div class="feed-header reveal">
+      <h2>Thoughts,<br><em>unfiltered.</em></h2>
+    </div>
+    <p class="feed-subtitle reveal">
+      Notes on wine, running, film, law, and everything in between.
+      &nbsp;&middot;&nbsp;
+      <a href="https://bsky.app/profile/limengsun.bsky.social" target="_blank" rel="noopener">Follow on Bluesky &#x2197;</a>
+    </p>
+    <div class="feed-list" id="feed-list">
+      <div class="feed-loading">Loading posts&hellip;</div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <p class="section-label reveal">004 &mdash; Contact</p>
+    <h2 class="reveal">Get in<br><em>touch.</em></h2>
+    <p class="reveal" style="margin-bottom:3rem;">Whether you have a question, a project, or just want to say hello &mdash; I'm always glad to hear from people.</p>
+    <div class="contact-row reveal">
+      <a class="contact-link" href="https://www.linkedin.com/in/limengsun/" target="_blank" rel="noopener">
+        <span class="contact-platform">LinkedIn</span>
+        <span class="contact-handle">Limeng Sun</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+      <a class="contact-link" href="https://letterboxd.com/unmingles/" target="_blank" rel="noopener">
+        <span class="contact-platform">Letterboxd</span>
+        <span class="contact-handle">unmingles</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+      <a class="contact-link" href="https://bsky.app/profile/limengsun.bsky.social" target="_blank" rel="noopener">
+        <span class="contact-platform">Bluesky</span>
+        <span class="contact-handle">limengsun.bsky.social</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+      <a class="contact-link" href="mailto:limengsun15&#64;gmail.com">
+        <span class="contact-platform">Email</span>
+        <span class="contact-handle">limengsun15&#64;gmail.com</span>
+        <span class="contact-arrow">&#x2197;</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Limeng Sun &nbsp;&middot;&nbsp; London</p>
+  </footer>
+
+  <script>
+    /* SCROLL REVEAL */
+    var revealObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
+
+    /* BLUESKY FEED */
+    var BSKY_HANDLE = 'limengsun.bsky.social';
+    var BSKY_LIMIT = 10;
+
+    function formatDate(iso) {
+      var d = new Date(iso);
+      return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    function linkifyText(text) {
+      // Linkify URLs
+      text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      // Linkify mentions
+      text = text.replace(/@([\w.]+)/g, '<a href="https://bsky.app/profile/$1" target="_blank" rel="noopener">@$1</a>');
+      // Linkify hashtags
+      text = text.replace(/#(\w+)/g, '<a href="https://bsky.app/hashtag/$1" target="_blank" rel="noopener">#$1</a>');
+      return text;
+    }
+
+    function buildPostUrl(handle, uri) {
+      // uri format: at://did:plc:.../app.bsky.feed.post/rkey
+      var parts = uri.split('/');
+      var rkey = parts[parts.length - 1];
+      return 'https://bsky.app/profile/' + handle + '/post/' + rkey;
+    }
+
+    function renderFeed(posts) {
+      var list = document.getElementById('feed-list');
+      list.innerHTML = '';
+
+      if (!posts || !posts.length) {
+        list.innerHTML = '<div class="feed-error">No posts found.</div>';
+        return;
+      }
+
+      posts.forEach(function(item) {
+        var post = item.post;
+        if (!post || !post.record) return;
+
+        var text = post.record.text || '';
+        var date = post.record.createdAt || '';
+        var likeCount = post.likeCount || 0;
+        var repostCount = post.repostCount || 0;
+        var replyCount = post.replyCount || 0;
+        var postUrl = buildPostUrl(BSKY_HANDLE, post.uri);
+
+        // Images
+        var imagesHtml = '';
+        if (post.embed && post.embed.images && post.embed.images.length) {
+          imagesHtml = '<div class="bsky-images">';
+          post.embed.images.forEach(function(img) {
+            imagesHtml += '<img src="' + img.fullsize + '" alt="' + (img.alt || '') + '" loading="lazy" />';
+          });
+          imagesHtml += '</div>';
+        }
+
+        var card = document.createElement('a');
+        card.className = 'bsky-card';
+        card.href = postUrl;
+        card.target = '_blank';
+        card.rel = 'noopener';
+        card.innerHTML =
+          '<div class="bsky-meta">' +
+            '<span class="bsky-date">' + formatDate(date) + '</span>' +
+          '</div>' +
+          '<div class="bsky-text">' + linkifyText(text) + '</div>' +
+          imagesHtml +
+          '<div class="bsky-footer">' +
+            '<span class="bsky-stat">&#x2665; ' + likeCount + '</span>' +
+            '<span class="bsky-stat">&#x21BA; ' + repostCount + '</span>' +
+            '<span class="bsky-stat">&#x1F4AC; ' + replyCount + '</span>' +
+            '<span class="bsky-arrow">View on Bluesky &#x2197;</span>' +
+          '</div>';
+
+        list.appendChild(card);
+      });
+    }
+
+    async function loadFeed() {
+      var list = document.getElementById('feed-list');
+      try {
+        // Step 1: resolve DID from handle
+        var resolveRes = await fetch(
+          'https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=' + BSKY_HANDLE
+        );
+        if (!resolveRes.ok) throw new Error('Could not resolve handle');
+        var resolveData = await resolveRes.json();
+        var did = resolveData.did;
+
+        // Step 2: fetch author feed
+        var feedRes = await fetch(
+          'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=' + did + '&limit=' + BSKY_LIMIT + '&filter=posts_no_replies'
+        );
+        if (!feedRes.ok) throw new Error('Could not fetch feed');
+        var feedData = await feedRes.json();
+
+        renderFeed(feedData.feed);
+      } catch(err) {
+        list.innerHTML = '<div class="feed-error">Could not load Bluesky posts. <a href="https://bsky.app/profile/' + BSKY_HANDLE + '" target="_blank" rel="noopener" style="color:var(--accent)">View on Bluesky &#x2197;</a></div>';
+      }
+    }
+
+    loadFeed();
+  </script>
+</body>
+</html>
